@@ -4,125 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Supercalculateur - Accès Sécurisé</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         :root {
             --lyoko-green: #00ff66;
             --lyoko-blue: #00ccff;
-            --bg-color: #080c14;
-            --card-bg: #101826;
-            --error-color: #ff3366;
+            --bg-dark: #05080a;
+            --error-red: #ff3366;
+            --text-main: #e0e0e0;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Courier New', Courier, monospace;
         }
 
         body {
-            background-color: var(--bg-color);
+            background-color: var(--bg-dark);
             color: var(--lyoko-green);
+            font-family: 'Share Tech Mono', monospace;
+            height: 100vh;
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            padding: 20px;
         }
 
-        .terminal {
-            background-color: var(--card-bg);
-            border: 2px solid var(--lyoko-green);
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
-            border-radius: 8px;
-            padding: 25px;
-            max-width: 600px;
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .terminal-container {
+            background: rgba(8, 12, 20, 0.9);
+            border: 2px solid var(--lyoko-green);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 102, 0.3);
+            padding: 30px;
+            width: 90%;
+            max-width: 650px;
             text-align: center;
+            z-index: 10;
+            position: relative;
         }
 
         h1 {
+            font-size: 2rem;
             color: var(--lyoko-blue);
-            font-size: 1.8rem;
+            text-transform: uppercase;
             margin-bottom: 15px;
-            text-shadow: 0 0 8px var(--lyoko-blue);
+            text-shadow: 0 0 15px var(--lyoko-blue);
+            letter-spacing: 2px;
         }
 
         .status-bar {
-            margin-bottom: 20px;
-            font-weight: bold;
             font-size: 1.1rem;
+            margin-bottom: 25px;
+            color: #fff;
+            border-bottom: 1px solid rgba(0, 255, 102, 0.3);
+            padding-bottom: 10px;
         }
 
         .riddle-box {
-            background-color: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
             border: 1px dashed var(--lyoko-blue);
-            padding: 15px;
+            padding: 20px;
             border-radius: 5px;
-            margin-bottom: 20px;
             text-align: left;
-            line-height: 1.5;
-            color: #e0e0e0;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: var(--text-main);
+            font-size: 1.2rem;
         }
 
-        .riddle-box span {
-            color: var(--lyoko-green);
-            font-weight: bold;
+        .riddle-box p {
+            margin-bottom: 10px;
         }
 
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        @media(min-width: 480px) {
-            .input-group {
-                flex-direction: row;
-            }
+            gap: 15px;
         }
 
         input[type="text"] {
-            flex: 1;
-            padding: 12px;
+            width: 100%;
+            padding: 15px;
             background: #000;
             border: 1px solid var(--lyoko-green);
             color: var(--lyoko-green);
-            border-radius: 4px;
-            font-size: 1rem;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.2rem;
             outline: none;
+            border-radius: 4px;
+            text-align: center;
         }
 
         input[type="text"]:focus {
-            box-shadow: 0 0 8px var(--lyoko-green);
+            box-shadow: 0 0 10px var(--lyoko-green);
         }
 
         button {
-            padding: 12px 20px;
-            background-color: var(--lyoko-green);
+            width: 100%;
+            padding: 15px;
+            background: var(--lyoko-green);
             color: #000;
-            border: none;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.2rem;
             font-weight: bold;
-            font-size: 1rem;
+            text-transform: uppercase;
+            border: none;
             cursor: pointer;
             border-radius: 4px;
-            transition: 0.2s;
+            transition: all 0.3s ease;
         }
 
         button:hover {
-            background-color: var(--lyoko-blue);
-            box-shadow: 0 0 10px var(--lyoko-blue);
+            background: var(--lyoko-blue);
+            box-shadow: 0 0 20px var(--lyoko-blue);
         }
 
-        button:disabled {
-            background-color: #555;
-            color: #888;
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        /* Modal / Pop-up */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -133,147 +141,167 @@
             display: none;
             justify-content: center;
             align-items: center;
+            z-index: 100;
             padding: 20px;
-            z-index: 1000;
         }
 
-        .modal-content {
-            background: var(--card-bg);
+        .modal {
+            background: #0a1118;
             border: 2px solid var(--lyoko-blue);
-            box-shadow: 0 0 25px var(--lyoko-blue);
-            padding: 25px;
             border-radius: 8px;
+            padding: 30px;
+            text-align: center;
             max-width: 450px;
             width: 100%;
-            text-align: center;
+            box-shadow: 0 0 30px var(--lyoko-blue);
+            animation: modalFadeIn 0.3s ease;
         }
 
-        .modal-content h2 {
-            color: var(--lyoko-green);
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .modal h2 {
+            font-size: 1.8rem;
             margin-bottom: 15px;
+            text-transform: uppercase;
         }
 
-        .modal-content p {
-            color: #ffffff;
-            margin-bottom: 20px;
-            line-height: 1.4;
+        .modal p {
+            color: #fff;
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
         }
 
         .modal-btn {
-            background: var(--lyoko-blue);
+            width: auto;
+            padding: 12px 25px;
+            font-size: 1rem;
         }
 
-        .modal-btn-restart {
-            background: var(--error-color);
-            color: #ffffff;
+        @media (max-width: 480px) {
+            h1 { font-size: 1.5rem; }
+            .terminal-container { padding: 20px; }
+            .riddle-box, input[type="text"], button { font-size: 1rem; }
         }
     </style>
 </head>
 <body>
 
-    <div class="terminal">
+    <canvas id="matrix-bg"></canvas>
+
+    <div class="terminal-container">
         <h1>SUPERCALCULATEUR : ACCÈS</h1>
         <div class="status-bar">
-            TENTATIVES : <span id="attempt-count">0/5</span>
+            ENTREZ LE CODE POUR DÉVERROUILLER LE SITE
         </div>
 
         <div class="riddle-box">
-            <p><strong>Énigme d'Éragny :</strong></p><br>
-            <p>Dans le vaisseau de la ville, un imposteur s'est caché.</p>
-            <p>Il ne s'appelle ni <span>Jérémie</span>, ni <span>Aelita</span>, ni <span>XANA</span>.</p>
-            <p>Il porte la couleur de la passion, feint d'accomplir ses tâches au reactor, mais il attend dans l'ombre pour couper le courant.</p>
-            <p><em>Qui est l'imposteur d'Éragny ?</em></p>
+            <p>Plus je suis grande, moins tu me vois dans le noir.</p>
+            <p>Je marche quand tu marches, mais je ne fais aucun bruit.</p>
+            <br>
+            <p><strong>Que suis-je ?</strong></p>
         </div>
 
         <div class="input-group">
-            <input type="text" id="answer-input" placeholder="Entrez la réponse..." autocomplete="off">
-            <button id="submit-btn" onclick="checkAnswer()">VALIDER</button>
+            <input type="text" id="answer" placeholder="Écris ta réponse ici..." autocomplete="off">
+            <button onclick="validateCode()">VALIDER</button>
         </div>
     </div>
 
-    <div class="modal-overlay" id="result-modal">
-        <div class="modal-content">
-            <h2 id="modal-title">CODE ACCEPTÉ</h2>
-            <p id="modal-message">Accès autorisé. Transfert vers le secteur virtuel...</p>
-            <button class="modal-btn" id="modal-action-btn">CONTINUER</button>
+    <div class="modal-overlay" id="popup">
+        <div class="modal">
+            <h2 id="pop-title">TITRE</h2>
+            <p id="pop-msg">MESSAGE</p>
+            <button class="modal-btn" id="pop-btn">BOUTON</button>
         </div>
     </div>
 
     <script>
-        let attempts = 0;
-        const maxAttempts = 5;
-        const correctAnswer = "rouge"; 
+        // Animation de fond (Chiffres/Caractères qui défilent)
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
 
-        // Permet de valider aussi en appuyant sur la touche "Entrée"
-        document.getElementById("answer-input").addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                checkAnswer();
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const chars = "0123456789アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン";
+        const charArray = chars.split('');
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(5, 8, 10, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00ff66";
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = charArray[Math.floor(Math.random() * charArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        // Validation de la réponse (Réponses acceptées : ombre, l'ombre, une ombre)
+        const validAnswers = ["ombre", "l'ombre", "une ombre", "l ombre"];
+
+        document.getElementById('answer').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                validateCode();
             }
         });
 
-        function checkAnswer() {
-            const inputField = document.getElementById("answer-input");
-            const submitBtn = document.getElementById("submit-btn");
-            const attemptDisplay = document.getElementById("attempt-count");
-            
-            const userAnswer = inputField.value.trim().toLowerCase();
+        function validateCode() {
+            const inputField = document.getElementById('answer');
+            const userInput = inputField.value.toLowerCase().trim();
+            const popup = document.getElementById('popup');
+            const title = document.getElementById('pop-title');
+            const msg = document.getElementById('pop-msg');
+            const btn = document.getElementById('pop-btn');
 
-            if (userAnswer === "") return;
+            if (userInput === "") return;
 
-            attempts++;
-            attemptDisplay.textContent = attempts + "/5";
-
-            if (userAnswer === correctAnswer || userAnswer === "le rouge") {
-                showModal("ACCÈS AUTORISÉ", "Bravo ! Tu as démasqué l'imposteur d'Éragny. Le code de sécurité est déverrouillé.", "success");
+            if (validAnswers.includes(userInput)) {
+                // BRAVO !
+                title.innerText = "BRAVO ! ACCÈS AUTORISÉ";
+                title.style.color = "var(--lyoko-green)";
+                msg.innerText = "Tu as trouvé la bonne réponse ! Clique sur le bouton pour laisser le joueur suivant recommencer.";
+                btn.innerText = "ENFANT SUIVANT (RECOMMENCER)";
+                btn.onclick = function() {
+                    location.reload(); // Recharge la page pour le joueur suivant
+                };
+                popup.style.display = "flex";
+                inputField.value = "";
             } else {
-                if (attempts >= maxAttempts) {
-                    inputField.disabled = true;
-                    submitBtn.disabled = true;
-                    showModal("ACCÈS REFUSÉ", "Nombre maximal de tentatives atteint (5/5). Le système est verrouillé.", "fail");
-                } else {
-                    showModal("ERREUR CODE", "Réponse incorrecte. Analyse du signal échouée. Réessaye !", "error");
-                }
-            }
-        }
-
-        function showModal(title, message, type) {
-            const modal = document.getElementById("result-modal");
-            const modalTitle = document.getElementById("modal-title");
-            const modalMessage = document.getElementById("modal-message");
-            const modalBtn = document.getElementById("modal-action-btn");
-
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-
-            // Réinitialisation des classes de bouton
-            modalBtn.className = "modal-btn";
-
-            if (type === "success") {
-                modalTitle.style.color = "var(--lyoko-green)";
-                modalBtn.textContent = "CONTINUER";
-                modalBtn.onclick = function() {
-                    window.location.href = "secteur.html";
+                // ERREUR (Essais illimités)
+                title.innerText = "INCORRECT !";
+                title.style.color = "var(--error-red)";
+                msg.innerText = "Ce n'est pas la bonne réponse. Réessaye encore !";
+                btn.innerText = "RÉESSAYER";
+                btn.onclick = function() {
+                    popup.style.display = "none";
+                    inputField.focus();
                 };
-            } else if (type === "fail") {
-                modalTitle.style.color = "var(--error-color)";
-                modalBtn.textContent = "RAFRAÎCHIR LA PAGE POUR RECOMMENCER";
-                modalBtn.className = "modal-btn modal-btn-restart";
-                modalBtn.onclick = function() {
-                    location.reload(); // Rafraîchit la page
-                };
-            } else { // Erreur simple (essais restant)
-                modalTitle.style.color = "var(--error-color)";
-                modalBtn.textContent = "RÉESSAYER";
-                modalBtn.onclick = closeModal;
+                popup.style.display = "flex";
+                inputField.value = "";
             }
-
-            modal.style.display = "flex";
-        }
-
-        function closeModal() {
-            document.getElementById("result-modal").style.display = "none";
-            document.getElementById("answer-input").value = "";
-            document.getElementById("answer-input").focus();
         }
     </script>
 </body>
