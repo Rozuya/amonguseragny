@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supercalculateur - Accès Sécurisé</title>
+    <style>
+        :root {
+            --lyoko-green: #00ff66;
+            --lyoko-blue: #00ccff;
+            --bg-color: #080c14;
+            --card-bg: #101826;
+            --error-color: #ff3366;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--lyoko-green);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .terminal {
+            background-color: var(--card-bg);
+            border: 2px solid var(--lyoko-green);
+            box-shadow: 0 0 20px rgba(0, 255, 102, 0.2);
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: var(--lyoko-blue);
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px var(--lyoko-blue);
+        }
+
+        .status-bar {
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .riddle-box {
+            background-color: rgba(0, 0, 0, 0.4);
+            border: 1px dashed var(--lyoko-blue);
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: left;
+            line-height: 1.5;
+            color: #e0e0e0;
+        }
+
+        .riddle-box span {
+            color: var(--lyoko-green);
+            font-weight: bold;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        @media(min-width: 480px) {
+            .input-group {
+                flex-direction: row;
+            }
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            background: #000;
+            border: 1px solid var(--lyoko-green);
+            color: var(--lyoko-green);
+            border-radius: 4px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            box-shadow: 0 0 8px var(--lyoko-green);
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: var(--lyoko-green);
+            color: #000;
+            border: none;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--lyoko-blue);
+            box-shadow: 0 0 10px var(--lyoko-blue);
+        }
+
+        button:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Modal / Pop-up */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 2px solid var(--lyoko-blue);
+            box-shadow: 0 0 25px var(--lyoko-blue);
+            padding: 25px;
+            border-radius: 8px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            color: var(--lyoko-green);
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            color: #ffffff;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .modal-btn {
+            background: var(--lyoko-blue);
+        }
+
+        .modal-btn-restart {
+            background: var(--error-color);
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terminal">
+        <h1>SUPERCALCULATEUR : ACCÈS</h1>
+        <div class="status-bar">
+            TENTATIVES : <span id="attempt-count">0/5</span>
+        </div>
+
+        <div class="riddle-box">
+            <p><strong>Énigme d'Éragny :</strong></p><br>
+            <p>Dans le vaisseau de la ville, un imposteur s'est caché.</p>
+            <p>Il ne s'appelle ni <span>Jérémie</span>, ni <span>Aelita</span>, ni <span>XANA</span>.</p>
+            <p>Il porte la couleur de la passion, feint d'accomplir ses tâches au reactor, mais il attend dans l'ombre pour couper le courant.</p>
+            <p><em>Qui est l'imposteur d'Éragny ?</em></p>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="answer-input" placeholder="Entrez la réponse..." autocomplete="off">
+            <button id="submit-btn" onclick="checkAnswer()">VALIDER</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-content">
+            <h2 id="modal-title">CODE ACCEPTÉ</h2>
+            <p id="modal-message">Accès autorisé. Transfert vers le secteur virtuel...</p>
+            <button class="modal-btn" id="modal-action-btn">CONTINUER</button>
+        </div>
+    </div>
+
+    <script>
+        let attempts = 0;
+        const maxAttempts = 5;
+        const correctAnswer = "rouge"; 
+
+        // Permet de valider aussi en appuyant sur la touche "Entrée"
+        document.getElementById("answer-input").addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+        });
+
+        function checkAnswer() {
+            const inputField = document.getElementById("answer-input");
+            const submitBtn = document.getElementById("submit-btn");
+            const attemptDisplay = document.getElementById("attempt-count");
+            
+            const userAnswer = inputField.value.trim().toLowerCase();
+
+            if (userAnswer === "") return;
+
+            attempts++;
+            attemptDisplay.textContent = attempts + "/5";
+
+            if (userAnswer === correctAnswer || userAnswer === "le rouge") {
+                showModal("ACCÈS AUTORISÉ", "Bravo ! Tu as démasqué l'imposteur d'Éragny. Le code de sécurité est déverrouillé.", "success");
+            } else {
+                if (attempts >= maxAttempts) {
+                    inputField.disabled = true;
+                    submitBtn.disabled = true;
+                    showModal("ACCÈS REFUSÉ", "Nombre maximal de tentatives atteint (5/5). Le système est verrouillé.", "fail");
+                } else {
+                    showModal("ERREUR CODE", "Réponse incorrecte. Analyse du signal échouée. Réessaye !", "error");
+                }
+            }
+        }
+
+        function showModal(title, message, type) {
+            const modal = document.getElementById("result-modal");
+            const modalTitle = document.getElementById("modal-title");
+            const modalMessage = document.getElementById("modal-message");
+            const modalBtn = document.getElementById("modal-action-btn");
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Réinitialisation des classes de bouton
+            modalBtn.className = "modal-btn";
+
+            if (type === "success") {
+                modalTitle.style.color = "var(--lyoko-green)";
+                modalBtn.textContent = "CONTINUER";
+                modalBtn.onclick = function() {
+                    window.location.href = "secteur.html";
+                };
+            } else if (type === "fail") {
+                modalTitle.style.color = "var(--error-color)";
+                modalBtn.textContent = "RAFRAÎCHIR LA PAGE POUR RECOMMENCER";
+                modalBtn.className = "modal-btn modal-btn-restart";
+                modalBtn.onclick = function() {
+                    location.reload(); // Rafraîchit la page
+                };
+            } else { // Erreur simple (essais restant)
+                modalTitle.style.color = "var(--error-color)";
+                modalBtn.textContent = "RÉESSAYER";
+                modalBtn.onclick = closeModal;
+            }
+
+            modal.style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("result-modal").style.display = "none";
+            document.getElementById("answer-input").value = "";
+            document.getElementById("answer-input").focus();
+        }
+    </script>
+</body>
+</html>
