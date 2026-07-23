@@ -47,7 +47,7 @@
             position: fixed;
             top: 15px;
             right: 15px;
-            background: rgba(8, 12, 20, 0.9);
+            background: rgba(8, 12, 20, 0.95);
             border: 1px solid var(--lyoko-blue);
             border-radius: 8px;
             padding: 10px 15px;
@@ -59,8 +59,8 @@
         }
 
         .music-btn {
-            background: var(--lyoko-blue);
-            color: #000;
+            background: var(--error-red);
+            color: #ffffff;
             border: none;
             padding: 6px 12px;
             font-family: 'Share Tech Mono', monospace;
@@ -72,8 +72,7 @@
         }
 
         .music-btn:hover {
-            background: var(--lyoko-green);
-            box-shadow: 0 0 10px var(--lyoko-green);
+            opacity: 0.9;
         }
 
         .volume-container {
@@ -87,7 +86,7 @@
         input[type="range"] {
             accent-color: var(--lyoko-green);
             cursor: pointer;
-            width: 80px;
+            width: 90px;
         }
 
         /* TERMINAL PRINCIPAL */
@@ -242,15 +241,14 @@
 
     <canvas id="matrix-bg"></canvas>
 
-    <audio id="bg-music" loop>
+    <audio id="bg-music" loop preload="auto">
         <source src="A World Without Danger.mp3" type="audio/mpeg">
-        Votre navigateur ne prend pas en charge l'élément audio.
     </audio>
 
     <div class="audio-controls">
-        <button id="toggle-music" class="music-btn" onclick="toggleMusic()">🔊 ON</button>
+        <button id="toggle-music" class="music-btn" onclick="toggleMusic()">🔇 MUSIQUE : OFF</button>
         <div class="volume-container">
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" oninput="changeVolume(this.value)">
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.5" oninput="changeVolume(this.value)" onchange="changeVolume(this.value)">
             <span id="volume-text">50%</span>
         </div>
     </div>
@@ -283,38 +281,117 @@
     </div>
 
     <script>
-        // --- GESTION MUSIQUE ---
+        // --- GESTION MUSIQUE ET VOLUME ---
         const audio = document.getElementById('bg-music');
         const musicBtn = document.getElementById('toggle-music');
+        const volumeSlider = document.getElementById('volume-slider');
         const volumeText = document.getElementById('volume-text');
 
-        // Réglage initial du volume (50%)
-        audio.volume = 0.5;
-
-        // Tente de lancer la musique automatiquement au premier clic sur la page (exigence des navigateurs)
-        document.body.addEventListener('click', function startAudio() {
-            if (audio.paused && musicBtn.innerText === "🔊 ON") {
-                audio.play().catch(() => {});
-            }
-            document.body.removeEventListener('click', startAudio);
-        }, { once: true });
+        // Initialisation du volume
+        audio.volume = parseFloat(volumeSlider.value);
 
         function toggleMusic() {
             if (audio.paused) {
-                audio.play();
-                musicBtn.innerText = "🔊 ON";
-                musicBtn.style.background = "var(--lyoko-blue)";
+                audio.play().then(() => {
+                    musicBtn.innerText = "🔊 MUSIQUE : ON";
+                    musicBtn.style.background = "var(--lyoko-blue)";
+                    musicBtn.style.color = "#000";
+                }).catch((error) => {
+                    console.error("Erreur de lecture :", error);
+                    alert("Impossible de lire la musique. Vérifie que le fichier 'A World Without Danger.mp3' est bien placé au même endroit que index.html sur GitHub !");
+                });
             } else {
                 audio.pause();
-                musicBtn.innerText = "🔇 OFF";
+                musicBtn.innerText = "🔇 MUSIQUE : OFF";
                 musicBtn.style.background = "var(--error-red)";
+                musicBtn.style.color = "#fff";
             }
         }
 
         function changeVolume(val) {
-            audio.volume = val;
+            audio.volume = parseFloat(val);
             const percent = Math.round(val * 100);
             volumeText.innerText = percent + "%";
         }
 
-        // --- ANIMATION DE FOND (MATRIX)
+        // --- ANIMATION DE FOND (MATRIX) ---
+        const canvas = document.getElementById('matrix-bg');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const chars = "0123456789アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン";
+        const charArray = chars.split('');
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(5, 8, 10, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#00ff66";
+            ctx.font = fontSize + "px monospace";
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = charArray[Math.floor(Math.random() * charArray.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 35);
+
+        // --- VALIDATION ÉNIGME ---
+        const validAnswers = [
+            "éponge", "eponge", 
+            "une éponge", "une eponge", 
+            "l'éponge", "l'eponge", 
+            "léponge", "leponge"
+        ];
+
+        document.getElementById('answer').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                validateCode();
+            }
+        });
+
+        function validateCode() {
+            const inputField = document.getElementById('answer');
+            const userInput = inputField.value.toLowerCase().trim();
+            const popup = document.getElementById('popup');
+            const title = document.getElementById('pop-title');
+            const msg = document.getElementById('pop-msg');
+            const btn = document.getElementById('pop-btn');
+
+            if (userInput === "") return;
+
+            if (validAnswers.includes(userInput)) {
+                window.location.href = "secteur.html";
+            } else {
+                title.innerText = "INCORRECT !";
+                title.style.color = "var(--error-red)";
+                msg.innerText = "Ce n'est pas la bonne réponse. Réessaye encore !";
+                btn.innerText = "RÉESSAYER";
+                btn.onclick = function() {
+                    popup.style.display = "none";
+                    inputField.focus();
+                };
+                popup.style.display = "flex";
+                inputField.value = "";
+            }
+        }
+    </script>
+</body>
+</html>
